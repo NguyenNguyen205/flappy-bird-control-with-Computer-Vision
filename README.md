@@ -4,6 +4,6 @@ A team project that controls flappy bird game using hand gesture recognition thr
 
 ## Tech Stack
 
-
 ## Reference
-Special thanks to <a href="https://github.com/EvanBacon/react-flappy-bird"> Project </a> for the open source react based flappy bird game
+
+Special thanks to <a href="https://replit.com/@ritza/Flappy-Bird-PixiJS#script.js"> Project </a> for the open source react based flappy bird game
