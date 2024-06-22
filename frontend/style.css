@@ -3,7 +3,51 @@
     margin: 0;
   }
   
-  body {
-    overflow-y: hidden;
-    text-align: center;
-  }
+body {
+  overflow-y: hidden;
+  overflow-x: hidden;
+  text-align: center;
+
+}
+
+.container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;  
+  justify-content: space-between;
+
+}
+
+#scoreContainer {
+  margin: 5vw;
+}
+
+#canva {
+  max-width: 66vw;
+}
+canvas {
+  margin: 0 1vw;
+  width: auto;
+  max-width: 100%;
+}
+
+#inputContainer {
+  margin: 5vw;
+}
+
+#manual {
+  background-color: #91593d;
+  border: 1px solid black;
+  border-radius: 5px;
+  padding: 1rem;
+  display: none;
+}
+
+#input {
+  list-style: none;
+}
+
+li img{
+  width: 30px;
+  height: 30px;
+}

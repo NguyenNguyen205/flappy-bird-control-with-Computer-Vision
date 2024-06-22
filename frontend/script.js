@@ -1,4 +1,4 @@
-const CONFIG_WIDTH = 800;
+const CONFIG_WIDTH = 600;
 const CONFIG_HEIGHT = 600;
 const PIPE_DISTANCE_BETWEEN_Y = CONFIG_HEIGHT / 6;
 const PIPES_IN_SCENE = 3;
@@ -16,14 +16,14 @@ let gameOver = false;
 let score = 0;
 
 // Aliases
-const { Application } = PIXI;
-const loader = PIXI.Loader.shared;
-const { resources } = PIXI.Loader.shared;
-const { Sprite } = PIXI;
-const { Text } = PIXI;
+let { Application } = PIXI;
+let loader = PIXI.Loader.shared;
+let { resources } = PIXI.Loader.shared;
+let { Sprite } = PIXI;
+let { Text } = PIXI;
 
 // Create a Pixi Application
-const app = new Application({
+let app = new Application({
   width: CONFIG_WIDTH,
   height: CONFIG_HEIGHT,
   antialias: true,
@@ -33,18 +33,19 @@ const app = new Application({
 });
 
 // Add the canvas that Pixi automatically created for you to the HTML document
-document.body.appendChild(app.view);
+document.querySelector("#canva").appendChild(app.view);
 
 // Load images and sounds and then run the `setup` callback function
 loader
   .add("bgImg", "assets/images/bg.png")
   .add("birdImg", "assets/images/bird.png")
   .add("pipeImg", "assets/images/pipe.png")
-  .add("bird-sound", "assets/sounds/woosh.mp3")
-  .add("crash-sound", "assets/sounds/ding.mp3")
+  // .add("bird-sound", "assets/sounds/woosh.mp3")
+  // .add("crash-sound", "assets/sounds/ding.mp3")
   .load(setup);
-
 function setup() {
+  // Get and set highest score
+  document.getElementById("maxScore").innerHTML = localStorage.getItem("score");
   // Initialize the game sprites, set the game state to `play`
   //  and start the 'gameLoop'
   bg = new Sprite(resources.bgImg.texture);
@@ -106,16 +107,17 @@ function setup() {
   app.stage.addChild(bird);
 
   // add score text
-  scoreText = new Text(`Score: ${score}`);
-  app.stage.addChild(scoreText);
-  scoreText.position.set(16, 16);
+  document.getElementById("score").innerHTML = `${score}`;
+  // scoreText = new Text(`Score: ${score}`);
+  // app.stage.addChild(scoreText);
+  // scoreText.position.set(16, 16);
 
   // Capture the keyboard arrow keys
   up = keyboard(["ArrowUp", "click", "touchstart"]);
   up.press = () => {
     bird.vy = -2;
     bird.rotation = -0.5;
-    PIXI.sound.play("bird-sound");
+    PIXI.sound.play("bird-sound"); // A bug as a feature
   };
   up.release = () => {
     bird.vy = 0;
@@ -142,12 +144,65 @@ function gameLoop(delta) {
       pipe.vx = 0;
     });
     // give time for the bird bounce to complete
-    window.setInterval(() => {
-      app.ticker.remove(gameLoopFn);
-    }, 3000);
+    // window.setInterval(() => {
+    //   app.ticker.remove(gameLoopFn);
+    // }, 3000);
+    // console.log("Game over");
+    startGameRestart();
   }
   // Runs the current game `state` in a loop and renders the sprites
-  state(delta);
+  play(delta);
+}
+
+const gameRestart = (event) => {
+  if (!gameOver) return;
+  if (event.key === "Enter") {
+    app.ticker.remove(gameLoopFn);
+    // Set highest score
+    if (localStorage.getItem("score") == null) {
+      localStorage.setItem("score", score);
+    } else {
+      let currentMaxScore = parseInt(localStorage.getItem("score"));
+      if (score > currentMaxScore) {
+        localStorage.setItem("score", score);
+      }
+    }
+
+    // Reset every variables
+    document.getElementById("input").innerHTML = "";
+    bg = null;
+    bird = null;
+    pipes = [];
+    state = null;
+    gameLoopFn = null;
+    up = null;
+    scoreText = null;
+    gameOver = false;
+    score = 0;
+    app = new Application({
+      width: CONFIG_WIDTH,
+      height: CONFIG_HEIGHT,
+      antialias: true,
+      transparent: false,
+      resolution: window.devicePixelRatio || 1,
+      autoDensity: true,
+    });
+    document.querySelector("#canva").replaceChildren();
+    document.querySelector("#canva").appendChild(app.view);
+    loader.reset();
+    loader.load(setup);
+
+    document.getElementById("manual").style.display = "none";
+    console.log("Restarting");
+    // app.ticker.add(gameLoopFn);
+  }
+};
+function startGameRestart() {
+  if (gameOver) {
+    document.getElementById("manual").style.display = "block";
+  }
+
+  window.addEventListener("keydown", gameRestart);
 }
 
 function play(delta) {
@@ -190,7 +245,7 @@ function play(delta) {
     if (hitTestRectangle(bird, pipe.getBounds())) {
       // make sound only play once
       if (gameOver === false) {
-        PIXI.sound.play("crash-sound");
+        // PIXI.sound.play("crash-sound");
       }
       gameOver = true;
       // flip bird over
@@ -227,16 +282,16 @@ function resize() {
   const enlargedHeight = Math.floor(scale * CONFIG_HEIGHT);
 
   // margins for centering
-  const horizontalMargin = (screenWidth - enlargedWidth) / 2;
-  const verticalMargin = (screenHeight - enlargedHeight) / 2;
+  // const horizontalMargin = (screenWidth - enlargedWidth) / 2;
+  // const verticalMargin = (screenHeight - enlargedHeight) / 2;
 
   // css to set the sizes and margins
   app.view.style.width = `${enlargedWidth}px`;
   app.view.style.height = `${enlargedHeight}px`;
-  app.view.style.marginLeft =
-    app.view.style.marginRight = `${horizontalMargin}px`;
-  app.view.style.marginTop =
-    app.view.style.marginBottom = `${verticalMargin}px`;
+  // // app.view.style.marginLeft =
+  // //   app.view.style.marginRight = `${horizontalMargin}px`;
+  // app.view.style.marginTop =
+  //   app.view.style.marginBottom = `${verticalMargin}px`;
 }
 
 function debounce(callback, wait) {
@@ -251,7 +306,9 @@ function debounce(callback, wait) {
 
 function setScore() {
   score += 1;
-  scoreText.text = `Score: ${score}`;
+  document.getElementById("score").innerHTML = `${score}`;
+  // score += 1;
+  // scoreText.text = `Score: ${score}`;
 }
 
 const throttledSetScore = debounce(setScore, 100);
@@ -294,6 +351,10 @@ function keyboard(value) {
       }
       key.isDown = false;
       key.isUp = true;
+      const ul = document.getElementById("input");
+      const li = document.createElement("li");
+      li.innerHTML = `<img src="./assets/images/up.png" alt="">`;
+      ul.appendChild(li);
       event.preventDefault();
     }
   };
