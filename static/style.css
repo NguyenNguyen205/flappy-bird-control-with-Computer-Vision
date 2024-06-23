@@ -1,0 +1,58 @@
+* {
+    padding: 0;
+    margin: 0;
+  }
+  
+body {
+  overflow-y: hidden;
+  overflow-x: hidden;
+  text-align: center;
+
+}
+
+.container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;  
+  justify-content: space-between;
+
+}
+
+#scoreContainer {
+  margin: 5vw;
+}
+
+#canva {
+  max-width: 66vw;
+}
+canvas {
+  margin: 0 1vw;
+  width: auto;
+  max-width: 100%;
+}
+
+#inputContainer {
+  margin: 0 5vw;
+}
+
+#manual {
+  background-color: #91593d;
+  border: 1px solid black;
+  border-radius: 5px;
+  padding: 1rem;
+  visibility: hidden;
+}
+
+#input {
+  list-style: none;
+}
+
+li img{
+  width: 25px;
+  height: 25px;
+}
+
+#camera {
+  max-width: 30vw;
+  max-height: 30vw;
+}
