@@ -1,11 +1,20 @@
-from flask import Flask, Response
+from flask import Flask, Response, render_template
 import cv2
 import mediapipe as mp
 import math
 import time
 import numpy as np
+from flask_socketio import SocketIO
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../templates', static_folder='../static')
+# Initialize socket io
+socketio = SocketIO(cors_allowed_origins=['http://127.0.0.1:5501'])
+
+def send_noti_yes():
+    socketio.emit('noti', 'yes')
+
+def send_noti_no():
+    socketio.emit('noti', 'no')
 
 def gen_frames():
     cap = cv2.VideoCapture(0)
@@ -62,9 +71,10 @@ def gen_frames():
                         eight = (cx, cy)
 
                 # This should approximate only
-                if dist(four, eight) <= 30:
-                    print('yes')
-
+                if dist(four, eight) <= 35:
+                    # Send notification
+                    send_noti_yes()
+                else: send_noti_no()
                     
                 mp_draw.draw_landmarks(img, handLM, mp_hands.HAND_CONNECTIONS)
 
@@ -89,7 +99,12 @@ def gen_frames():
 def video():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
+@app.route('/')
+def home():
+    return render_template('index.html')
+
 def main():
+    socketio.init_app(app=app)
     app.run(debug=True, port=5501)
 
 

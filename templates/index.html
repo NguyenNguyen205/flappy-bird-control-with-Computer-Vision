@@ -7,7 +7,8 @@
   <title>Flappy Bird - PixiJS</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.10/pixi.min.js"></script>
   <script src="https://unpkg.com/@pixi/sound/dist/pixi-sound.js"></script>
-  <link href="style.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
+  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css" />
 </head>
 
 <body>
@@ -16,14 +17,19 @@
       <h2>Score <span id="score"></span> </h2>
       <h2>Highest score <span id="maxScore"></span></h2>
       <div id="manual"><strong>Press ENTER to Restart</strong></div>
+      <div id="cameraContainer">
+        <img src="http://127.0.0.1:5501/video" alt="" id="camera">
+      </div>
+
     </div>
     <div id="canva"></div>
     <div id="inputContainer">
       <ul id="input">
+        <li style="visibility: hidden;"><img src="{{ url_for('static', filename='images/up.png') }}" alt=""></li>
       </ul>
     </div>
   </div>
   
 </body>
-<script src="script.js"></script>
+<script type="module" src="{{ url_for('static', filename='script.js') }}"></script>
 </html>

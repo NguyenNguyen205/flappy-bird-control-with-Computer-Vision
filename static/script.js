@@ -14,6 +14,9 @@ let up;
 let scoreText;
 let gameOver = false;
 let score = 0;
+let mess = "";
+import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
+const socket = io("http://localhost:5501");
 
 // Aliases
 let { Application } = PIXI;
@@ -37,12 +40,29 @@ document.querySelector("#canva").appendChild(app.view);
 
 // Load images and sounds and then run the `setup` callback function
 loader
-  .add("bgImg", "assets/images/bg.png")
-  .add("birdImg", "assets/images/bird.png")
-  .add("pipeImg", "assets/images/pipe.png")
+  .add("bgImg", "static/images/bg.png")
+  .add("birdImg", "static/images/bird.png")
+  .add("pipeImg", "static/images/pipe.png")
   // .add("bird-sound", "assets/sounds/woosh.mp3")
   // .add("crash-sound", "assets/sounds/ding.mp3")
   .load(setup);
+
+// Receive touch signal and jump the bird
+socket.on("noti", (res) => {
+  if (res !== mess) {
+    mess = res;
+    if (res === "yes") {
+      bird.vy = -2;
+      bird.rotation = -0.5;
+      const ul = document.getElementById("input");
+      const li = document.createElement("li");
+      li.innerHTML = `<img src="/static/images/up.png" alt="">`;
+      ul.insertBefore(li, ul.firstChild);
+    }
+  }
+});
+
+// Set up the environment
 function setup() {
   // Get and set highest score
   document.getElementById("maxScore").innerHTML = localStorage.getItem("score");
@@ -169,7 +189,9 @@ const gameRestart = (event) => {
     }
 
     // Reset every variables
-    document.getElementById("input").innerHTML = "";
+    document.getElementById("input").innerHTML = `
+       <li style="visibility: hidden;"><img src="{{ url_for('static', filename='images/up.png') }}" alt=""></li>
+    `;
     bg = null;
     bird = null;
     pipes = [];
@@ -192,14 +214,14 @@ const gameRestart = (event) => {
     loader.reset();
     loader.load(setup);
 
-    document.getElementById("manual").style.display = "none";
+    document.getElementById("manual").style.visibility = "hidden";
     console.log("Restarting");
     // app.ticker.add(gameLoopFn);
   }
 };
 function startGameRestart() {
   if (gameOver) {
-    document.getElementById("manual").style.display = "block";
+    document.getElementById("manual").style.visibility = "visible";
   }
 
   window.addEventListener("keydown", gameRestart);
@@ -307,8 +329,6 @@ function debounce(callback, wait) {
 function setScore() {
   score += 1;
   document.getElementById("score").innerHTML = `${score}`;
-  // score += 1;
-  // scoreText.text = `Score: ${score}`;
 }
 
 const throttledSetScore = debounce(setScore, 100);
@@ -353,8 +373,8 @@ function keyboard(value) {
       key.isUp = true;
       const ul = document.getElementById("input");
       const li = document.createElement("li");
-      li.innerHTML = `<img src="./assets/images/up.png" alt="">`;
-      ul.appendChild(li);
+      li.innerHTML = `<img src="/static/images/up.png" alt="">`;
+      ul.insertBefore(li, ul.firstChild);
       event.preventDefault();
     }
   };
