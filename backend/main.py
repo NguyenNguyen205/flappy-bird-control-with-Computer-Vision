@@ -1,9 +1,13 @@
+from flask import Flask, Response
 import cv2
 import mediapipe as mp
 import math
 import time
+import numpy as np
 
-def main():
+app = Flask(__name__)
+
+def gen_frames():
     cap = cv2.VideoCapture(0)
 
 
@@ -17,11 +21,20 @@ def main():
 
     def dist(pos1, pos2):
         return math.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2) 
+    
+    def smooth_landmarks(landmarks, previous_landmarks, smoothing_factor=0.5):
+        if previous_landmarks is None:
+            return landmarks
+        smoothed_landmarks = []
+        for current, previous in zip(landmarks, previous_landmarks):
+            smoothed_landmark = (1 - smoothing_factor) * np.array(previous) + smoothing_factor * np.array(current)
+            smoothed_landmarks.append(smoothed_landmark)
+        return smoothed_landmarks
 
     if (cap.isOpened() == False):
         print('error')
 
-    while (cap.isOpened()):
+    while (True):
 
         success, img = cap.read()
         imgrgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -34,15 +47,14 @@ def main():
         four = None
         eight = None
 
-
+        landmarks = smooth_landmarks(landmarks=results.multi_hand_landmarks, previous_landmarks=None)
         
         if results.multi_hand_landmarks:
-            for handLM in results.multi_hand_landmarks:
+            for handLM in landmarks:
                 for id, lm in enumerate(handLM.landmark):
                     # print(id, lm)
                     h, w, c = img.shape
                     cx, cy = int(lm.x * w), int(lm.y * h)
-                    print(id,cx, cy)
 
                     if id == 4:
                         four = (cx, cy)
@@ -50,7 +62,7 @@ def main():
                         eight = (cx, cy)
 
                 # This should approximate only
-                if dist(four, eight) <= 20:
+                if dist(four, eight) <= 30:
                     print('yes')
 
                     
@@ -64,15 +76,21 @@ def main():
 
                 
         cv2.imshow('Image', img)
-
+        _, buffer = cv2.imencode('.jpg', img)
+        frame_data = buffer.tobytes()
+        yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + frame_data + b'\r\n')
 
         # Break out of 
-        if cv2.waitKey(25) & 0xFF == ord('q'):
-                break
+        # if cv2.waitKey(25) & 0xFF == ord('q'):
+        #         break
 
-    cap.release()
 
-    cv2.destroyAllWindows()
+@app.route('/video')
+def video():
+    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+def main():
+    app.run(debug=True, port=5501)
 
 
 if __name__ == "__main__":
