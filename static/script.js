@@ -6,7 +6,7 @@ const socket = io("http://localhost:5501");
 const CONFIG_WIDTH = 600;
 const CONFIG_HEIGHT = 600;
 const PIPE_DISTANCE_BETWEEN_Y = CONFIG_HEIGHT / 6;
-const PIPES_IN_SCENE = 3;
+const PIPES_IN_SCENE = 2;
 const PIPE_DISTANCE_BETWEEN_X = CONFIG_WIDTH / PIPES_IN_SCENE;
 const BIRD_OFFSET_X = CONFIG_WIDTH / 2;
 
