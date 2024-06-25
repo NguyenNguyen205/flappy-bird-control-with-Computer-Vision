@@ -25,6 +25,7 @@ body {
 #canva {
   max-width: 66vw;
 }
+
 canvas {
   margin: 0 1vw;
   width: auto;
@@ -40,11 +41,14 @@ canvas {
   border: 1px solid black;
   border-radius: 5px;
   padding: 1rem;
+  margin: 3rem;
   visibility: hidden;
 }
 
 #input {
   list-style: none;
+  margin: 3rem;
+  padding: 1rem;
 }
 
 li img{
@@ -55,4 +59,8 @@ li img{
 #camera {
   max-width: 30vw;
   max-height: 30vw;
+}
+
+li {
+  font-size: 3rem;
 }

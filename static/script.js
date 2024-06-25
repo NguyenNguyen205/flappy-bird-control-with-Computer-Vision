@@ -1,3 +1,8 @@
+// Import and setup socket io
+import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
+const socket = io("http://localhost:5501");
+
+// Define constants
 const CONFIG_WIDTH = 600;
 const CONFIG_HEIGHT = 600;
 const PIPE_DISTANCE_BETWEEN_Y = CONFIG_HEIGHT / 6;
@@ -5,25 +10,23 @@ const PIPES_IN_SCENE = 3;
 const PIPE_DISTANCE_BETWEEN_X = CONFIG_WIDTH / PIPES_IN_SCENE;
 const BIRD_OFFSET_X = CONFIG_WIDTH / 2;
 
+// Define state variables
 let bg;
 let bird;
 let pipes;
 let state;
 let gameLoopFn;
 let up;
-let scoreText;
 let gameOver = false;
 let score = 0;
 let mess = "";
-import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
-const socket = io("http://localhost:5501");
+let countUp = 0;
 
 // Aliases
 let { Application } = PIXI;
 let loader = PIXI.Loader.shared;
 let { resources } = PIXI.Loader.shared;
 let { Sprite } = PIXI;
-let { Text } = PIXI;
 
 // Create a Pixi Application
 let app = new Application({
@@ -35,6 +38,24 @@ let app = new Application({
   autoDensity: true,
 });
 
+// Setup socket io to receive hand gesture notification from the backend
+socket.on("noti", (res) => {
+  // If unchanged notification, do nothing
+  if (res === mess) return;
+  mess = res;
+  // If notification is not a yes, do nothing
+  if (res !== "yes") return;
+  // Update bird position
+  bird.vy = -2;
+  bird.rotation = -0.5;
+  // Add up elements
+  const ul = document.getElementById("input");
+  const li = document.createElement("li");
+  // li.innerHTML = `<img src="/static/images/up.png" alt="">`;
+  li.innerHTML = `&#8657`;
+  ul.insertBefore(li, ul.firstChild);
+});
+
 // Add the canvas that Pixi automatically created for you to the HTML document
 document.querySelector("#canva").appendChild(app.view);
 
@@ -43,50 +64,29 @@ loader
   .add("bgImg", "static/images/bg.png")
   .add("birdImg", "static/images/bird.png")
   .add("pipeImg", "static/images/pipe.png")
-  // .add("bird-sound", "assets/sounds/woosh.mp3")
-  // .add("crash-sound", "assets/sounds/ding.mp3")
   .load(setup);
-
-// Receive touch signal and jump the bird
-socket.on("noti", (res) => {
-  if (res !== mess) {
-    mess = res;
-    if (res === "yes") {
-      bird.vy = -2;
-      bird.rotation = -0.5;
-      const ul = document.getElementById("input");
-      const li = document.createElement("li");
-      li.innerHTML = `<img src="/static/images/up.png" alt="">`;
-      ul.insertBefore(li, ul.firstChild);
-    }
-  }
-});
 
 // Set up the environment
 function setup() {
   // Get and set highest score
   document.getElementById("maxScore").innerHTML = localStorage.getItem("score");
-  // Initialize the game sprites, set the game state to `play`
-  //  and start the 'gameLoop'
+
+  // Make bg cover stage
   bg = new Sprite(resources.bgImg.texture);
-  // make bg cover stage
-  // need to add children to stage before the stage has a width and height,
-  //  can't use app.stage.width yet - it has no children
   bg.width = CONFIG_WIDTH;
   bg.height = CONFIG_HEIGHT;
   app.stage.addChild(bg);
+
   // An array to store all of the pipes
   pipes = [];
 
-  // create the pipes
+  // create and insert the pipes
   const numberOfpipes = PIPES_IN_SCENE * 2 + 2;
   let pipeDistanceBtn = PIPE_DISTANCE_BETWEEN_X + BIRD_OFFSET_X; // offset of bird from left along x-axis
   let heightDiff = randomInt(-PIPE_DISTANCE_BETWEEN_Y, PIPE_DISTANCE_BETWEEN_Y);
-  // pipes in 4 pairs
   for (let i = 0; i < numberOfpipes; i++) {
-    // Make a pipe
     const pipe = new Sprite(resources.pipeImg.texture);
-    // placement position based on the center of the sprite - not top, left corner (default)
+    // placement position based on the center of the sprite
     pipe.anchor.set(0.5, 0.5);
     pipe.y = CONFIG_HEIGHT;
 
@@ -107,30 +107,22 @@ function setup() {
       pipe.x = pipeDistanceBtn;
       pipe.y += heightDiff - CONFIG_HEIGHT;
       heightDiff = randomInt(-PIPE_DISTANCE_BETWEEN_Y, PIPE_DISTANCE_BETWEEN_Y);
-      // rotate 180 deg
       pipe.rotation = Math.PI;
     }
     pipe.vx = 1;
-
-    // Push the pipe into the `pipes` array
     pipes.push(pipe);
-    // Add the pipe to the game canvas stage
     app.stage.addChild(pipe);
   }
 
+  // Initialize bird object
   bird = new Sprite(resources.birdImg.texture);
-  // center bird on screen
   bird.anchor.set(0.5, 0.5);
   bird.position.set(CONFIG_WIDTH / 2, CONFIG_HEIGHT / 2);
   bird.vy = 0;
-  // Add the bird to the stage
   app.stage.addChild(bird);
 
   // add score text
   document.getElementById("score").innerHTML = `${score}`;
-  // scoreText = new Text(`Score: ${score}`);
-  // app.stage.addChild(scoreText);
-  // scoreText.position.set(16, 16);
 
   // Capture the keyboard arrow keys
   up = keyboard(["ArrowUp", "click", "touchstart"]);
@@ -143,11 +135,10 @@ function setup() {
     bird.vy = 0;
   };
 
-  // Set the game state - state is especially useful if there are other levels, screens, ect.
+  // Set the game state
   state = play;
 
-  // Start the game loop by adding the `gameLoop` function to
-  // Pixi's `ticker` and providing it with a `delta` argument.
+  // Start the game loop
   gameLoopFn = (delta) => gameLoop(delta);
   app.ticker.add(gameLoopFn);
 
@@ -159,18 +150,13 @@ function setup() {
 }
 
 function gameLoop(delta) {
+  // If keyboard enter capture, then restart the games with pipes set to 0
   if (gameOver) {
     pipes.forEach((pipe) => {
       pipe.vx = 0;
     });
-    // give time for the bird bounce to complete
-    // window.setInterval(() => {
-    //   app.ticker.remove(gameLoopFn);
-    // }, 3000);
-    // console.log("Game over");
     startGameRestart();
   }
-  // Runs the current game `state` in a loop and renders the sprites
   play(delta);
 }
 
@@ -189,16 +175,16 @@ const gameRestart = (event) => {
     }
 
     // Reset every variables
-    document.getElementById("input").innerHTML = `
-       <li style="visibility: hidden;"><img src="{{ url_for('static', filename='images/up.png') }}" alt=""></li>
-    `;
+    // document.getElementById("input").innerHTML = `
+    //    <li style="visibility: hidden;"><img src="{{ url_for('static', filename='images/up.png') }}" alt=""></li>
+    // `;
+    document.getElementById("input").innerHTML = `<li>&#8657;</li>`;
     bg = null;
     bird = null;
     pipes = [];
     state = null;
     gameLoopFn = null;
     up = null;
-    scoreText = null;
     gameOver = false;
     score = 0;
     app = new Application({
@@ -227,8 +213,8 @@ function startGameRestart() {
   window.addEventListener("keydown", gameRestart);
 }
 
+// Running game logic
 function play(delta) {
-  // All the game logic goes here
   // gravity - bird falling
   bird.vy += 0.05;
   if (!gameOver) {
@@ -265,10 +251,9 @@ function play(delta) {
     }
 
     if (hitTestRectangle(bird, pipe.getBounds())) {
-      // make sound only play once
-      if (gameOver === false) {
-        // PIXI.sound.play("crash-sound");
-      }
+      // if (gameOver === false) {
+
+      // }
       gameOver = true;
       // flip bird over
       bird.scale.y = -1;
@@ -303,17 +288,9 @@ function resize() {
   const enlargedWidth = Math.floor(scale * CONFIG_WIDTH);
   const enlargedHeight = Math.floor(scale * CONFIG_HEIGHT);
 
-  // margins for centering
-  // const horizontalMargin = (screenWidth - enlargedWidth) / 2;
-  // const verticalMargin = (screenHeight - enlargedHeight) / 2;
-
   // css to set the sizes and margins
   app.view.style.width = `${enlargedWidth}px`;
   app.view.style.height = `${enlargedHeight}px`;
-  // // app.view.style.marginLeft =
-  // //   app.view.style.marginRight = `${horizontalMargin}px`;
-  // app.view.style.marginTop =
-  //   app.view.style.marginBottom = `${verticalMargin}px`;
 }
 
 function debounce(callback, wait) {
@@ -326,6 +303,7 @@ function debounce(callback, wait) {
   };
 }
 
+// Displaying current score
 function setScore() {
   score += 1;
   document.getElementById("score").innerHTML = `${score}`;
@@ -337,6 +315,7 @@ function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+// Initialize and running keyboard input events
 function keyboard(value) {
   const key = {};
   key.value = value;
@@ -373,7 +352,8 @@ function keyboard(value) {
       key.isUp = true;
       const ul = document.getElementById("input");
       const li = document.createElement("li");
-      li.innerHTML = `<img src="/static/images/up.png" alt="">`;
+      // li.innerHTML = `<img src="/static/images/up.png" alt="">`;
+      li.innerHTML = `&#8657;`;
       ul.insertBefore(li, ul.firstChild);
       event.preventDefault();
     }
@@ -435,11 +415,8 @@ function contain(sprite, container) {
 }
 
 function hitTestRectangle(r1, r2) {
-  // Define the variables we'll need to calculate
-  let hit;
-
-  // hit will determine whether there's a collision
-  hit = false;
+  // Collision state
+  let hit = false;
 
   // Find the center points of each sprite
   r1.centerX = r1.x + r1.width / 2;
@@ -454,29 +431,23 @@ function hitTestRectangle(r1, r2) {
   r2.halfHeight = r2.height / 2;
 
   // Calculate the distance vector between the sprites
-  // - r1.halfWidth, -r1.halfHeight -> I added -> make collision when bird hits exactly
   const vx = r1.centerX - r2.centerX - r1.halfWidth;
   const vy = r1.centerY - r2.centerY - r1.halfHeight;
 
-  // Figure out the combined half-widths and half-heights
   const combinedHalfWidths = r1.halfWidth + r2.halfWidth;
   const combinedHalfHeights = r1.halfHeight + r2.halfHeight;
 
   // Check for a collision on the x-axis
   if (Math.abs(vx) < combinedHalfWidths) {
-    // A collision might be occurring. Check for a collision on the y-axis
+    // Check for a collision on the y-axis
     if (Math.abs(vy) < combinedHalfHeights) {
-      // There's definitely a collision happening
       hit = true;
     } else {
-      // There's no collision on the y-axis
       hit = false;
     }
   } else {
-    // There's no collision on the x-axis
     hit = false;
   }
 
-  // `hit` will be either `true` or `false`
   return hit;
 }
