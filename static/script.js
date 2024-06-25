@@ -1,7 +1,7 @@
 const CONFIG_WIDTH = 600;
 const CONFIG_HEIGHT = 600;
 const PIPE_DISTANCE_BETWEEN_Y = CONFIG_HEIGHT / 6;
-const PIPES_IN_SCENE = 3;
+const PIPES_IN_SCENE = 2;
 const PIPE_DISTANCE_BETWEEN_X = CONFIG_WIDTH / PIPES_IN_SCENE;
 const BIRD_OFFSET_X = CONFIG_WIDTH / 2;
 
@@ -52,12 +52,12 @@ socket.on("noti", (res) => {
   if (res !== mess) {
     mess = res;
     if (res === "yes") {
-      bird.vy = -2;
+      bird.vy = -1.6;
       bird.rotation = -0.5;
-      const ul = document.getElementById("input");
-      const li = document.createElement("li");
-      li.innerHTML = `<img src="/static/images/up.png" alt="">`;
-      ul.insertBefore(li, ul.firstChild);
+      // const ul = document.getElementById("input");
+      // const li = document.createElement("li");
+      // li.innerHTML = `<img src="/static/images/up.png" alt="">`;
+      // ul.insertBefore(li, ul.firstChild);
     }
   }
 });
@@ -190,7 +190,7 @@ const gameRestart = (event) => {
 
     // Reset every variables
     document.getElementById("input").innerHTML = `
-       <li style="visibility: hidden;"><img src="{{ url_for('static', filename='images/up.png') }}" alt=""></li>
+       <li style="visibility: hidden;"><img src="static/images/up.png" alt=""></li>
     `;
     bg = null;
     bird = null;

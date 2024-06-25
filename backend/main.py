@@ -69,9 +69,11 @@ def gen_frames():
                         four = (cx, cy)
                     if id == 8:
                         eight = (cx, cy)
+                
 
                 # This should approximate only
-                if dist(four, eight) <= 35:
+
+                if dist(four, eight) <= 22:
                     # Send notification
                     send_noti_yes()
                 else: send_noti_no()
@@ -90,10 +92,6 @@ def gen_frames():
         frame_data = buffer.tobytes()
         yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + frame_data + b'\r\n')
 
-        # Break out of 
-        # if cv2.waitKey(25) & 0xFF == ord('q'):
-        #         break
-
 
 @app.route('/video')
 def video():
@@ -110,4 +108,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
