@@ -10,7 +10,7 @@ A team project that controls flappy bird game using hand gesture recognition thr
 
 ### Machine requirements
 
-- Python installed
+- At least Python version 3.10 installed
 - Chrome browser
 
 ### Environment setup
@@ -36,10 +36,6 @@ A team project that controls flappy bird game using hand gesture recognition thr
 - `cd backend`
 - `python main.py`
 - Open Google Chrome and go to `http://127.0.0.1:5500/`
-
-## Todo
-
-- Add automation scripts
 
 ## Reference
 

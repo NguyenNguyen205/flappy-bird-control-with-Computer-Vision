@@ -48,12 +48,9 @@ socket.on("noti", (res) => {
   // Update bird position
   bird.vy = -2;
   bird.rotation = -0.5;
-  // Add up elements
-  const ul = document.getElementById("input");
-  const li = document.createElement("li");
-  // li.innerHTML = `<img src="/static/images/up.png" alt="">`;
-  li.innerHTML = `&#8657`;
-  ul.insertBefore(li, ul.firstChild);
+  // Increase count for number of input
+  ++countUp;
+  document.getElementById("count").innerText = countUp;
 });
 
 // Add the canvas that Pixi automatically created for you to the HTML document
@@ -173,12 +170,9 @@ const gameRestart = (event) => {
         localStorage.setItem("score", score);
       }
     }
-
-    // Reset every variables
-    // document.getElementById("input").innerHTML = `
-    //    <li style="visibility: hidden;"><img src="{{ url_for('static', filename='images/up.png') }}" alt=""></li>
-    // `;
-    document.getElementById("input").innerHTML = `<li>&#8657;</li>`;
+    document.getElementById(
+      "input"
+    ).innerHTML = `<span id="count">0</span>&#8657;`;
     bg = null;
     bird = null;
     pipes = [];
@@ -187,6 +181,7 @@ const gameRestart = (event) => {
     up = null;
     gameOver = false;
     score = 0;
+    countUp = 0;
     app = new Application({
       width: CONFIG_WIDTH,
       height: CONFIG_HEIGHT,
@@ -251,9 +246,6 @@ function play(delta) {
     }
 
     if (hitTestRectangle(bird, pipe.getBounds())) {
-      // if (gameOver === false) {
-
-      // }
       gameOver = true;
       // flip bird over
       bird.scale.y = -1;
@@ -350,11 +342,10 @@ function keyboard(value) {
       }
       key.isDown = false;
       key.isUp = true;
-      const ul = document.getElementById("input");
-      const li = document.createElement("li");
-      // li.innerHTML = `<img src="/static/images/up.png" alt="">`;
-      li.innerHTML = `&#8657;`;
-      ul.insertBefore(li, ul.firstChild);
+
+      ++countUp;
+      document.getElementById("count").innerText = countUp;
+
       event.preventDefault();
     }
   };
